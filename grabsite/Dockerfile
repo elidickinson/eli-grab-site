@@ -5,8 +5,11 @@ FROM --platform=linux/amd64 debian:bullseye-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget ca-certificates git build-essential libssl-dev zlib1g-dev \
     libbz2-dev libreadline-dev libsqlite3-dev libffi-dev libxml2-dev \
-    libxslt1-dev libre2-dev pkg-config python3.8 python3.8-dev python3.8-venv \
-    python3.8-distutils iputils-ping \
+    libxslt1-dev libre2-dev pkg-config iputils-ping \
+    && apt-get install -y --no-install-recommends software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends python3.8 python3.8-dev python3.8-venv python3.8-distutils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
