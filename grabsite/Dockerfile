@@ -1,5 +1,5 @@
-# Use a Debian 11 (Bullseye) base image
-FROM debian:bullseye-slim
+# Use amd64 Debian 11 (Bullseye) base image
+FROM --platform=linux/amd64 debian:bullseye-slim
 
 # Install basic dependencies including Python 3.8 and ping
 RUN apt-get update && apt-get install -y --no-install-recommends \

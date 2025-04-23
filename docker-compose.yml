@@ -21,8 +21,9 @@ services:
     networks:
       - vpn_network
 
-  # Custom grab-site container
+  # Custom grab-site container (forced to amd64)
   grabsite:
+    platform: linux/amd64
     build:
       context: ./grabsite
       dockerfile: Dockerfile
