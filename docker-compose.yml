@@ -11,12 +11,12 @@ services:
       # Load PIA credentials from environment variables
       - USER=${PIA_USERNAME}
       - PASSWORD=${PIA_PASSWORD}
-      # Choose your preferred region
-      - REGION=US East
+      # Choose your preferred region (from .env)
+      - REGION=${REGION:-US East}
       # Optional: Choose encryption level (normal or strong)
-      - ENCRYPTION=strong
+      - ENCRYPTION=${ENCRYPTION:-strong}
       # Optional: Choose protocol (udp or tcp)
-      - PROTOCOL=udp
+      - PROTOCOL=${PROTOCOL:-udp}
     # Create a named network for containers to join
     networks:
       - vpn_network
