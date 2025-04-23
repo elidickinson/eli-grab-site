@@ -2,7 +2,6 @@ services:
   # PIA VPN service that routes all traffic
   vpn:
     image: qmcgaw/private-internet-access:latest
-    container_name: pia-vpn
     cap_add:
       - NET_ADMIN  # Required for VPN networking
     devices:
@@ -27,7 +26,6 @@ services:
     build:
       context: ./grabsite
       dockerfile: Dockerfile
-    container_name: grabsite-scraper
     depends_on:
       - vpn
     # Connect to the VPN network - routes all traffic through the VPN
@@ -36,15 +34,14 @@ services:
       - ./warc:/warc  # Store WARC files in local directory
       - ./logs:/logs  # Store logs in local directory
       - ./sites:/sites  # Directory for crawler configurations
-    entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN connection...' && sleep 5 && grab-site --warc-dir=/warc $GRAB_SITE_ARGS"]
-    environment:
-      # Can be overridden with docker-compose run -e GRAB_SITE_ARGS="..." grabsite
-      - GRAB_SITE_ARGS=--help
-    
+    # Start the dashboard server by default
+    command: gs-server
+    # Simple delay to wait for VPN connection
+    entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN connection...' && sleep 5 && exec $0 $@"]
+
   # Network utilities container (not started automatically)
   netutils:
     image: nicolaka/netshoot:latest
-    container_name: network-utilities
     depends_on:
       - vpn
     network_mode: "service:vpn"  # Route through VPN
