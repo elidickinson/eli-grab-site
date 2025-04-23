@@ -1,0 +1,59 @@
+services:
+  # PIA VPN service that routes all traffic
+  vpn:
+    image: qmcgaw/private-internet-access:latest
+    container_name: pia-vpn
+    cap_add:
+      - NET_ADMIN  # Required for VPN networking
+    devices:
+      - /dev/net/tun  # Required for VPN tunneling
+    restart: unless-stopped
+    environment:
+      # Load PIA credentials from environment variables
+      - USER=${PIA_USERNAME}
+      - PASSWORD=${PIA_PASSWORD}
+      # Choose your preferred region
+      - REGION=US East
+      # Optional: Choose encryption level (normal or strong)
+      - ENCRYPTION=strong
+      # Optional: Choose protocol (udp or tcp)
+      - PROTOCOL=udp
+    # Create a named network for containers to join
+    networks:
+      - vpn_network
+
+  # Custom grab-site container
+  grabsite:
+    build:
+      context: ./grabsite
+      dockerfile: Dockerfile
+    container_name: grabsite-scraper
+    depends_on:
+      - vpn
+    # Connect to the VPN network - routes all traffic through the VPN
+    network_mode: "service:vpn"
+    volumes:
+      - ./warc:/warc  # Store WARC files in local directory
+      - ./logs:/logs  # Store logs in local directory
+      - ./sites:/sites  # Directory for crawler configurations
+    entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN connection...' && sleep 5 && grab-site --warc-dir=/warc $GRAB_SITE_ARGS"]
+    environment:
+      # Can be overridden with docker-compose run -e GRAB_SITE_ARGS="..." grabsite
+      - GRAB_SITE_ARGS=--help
+    
+  # Network utilities container (not started automatically)
+  netutils:
+    image: nicolaka/netshoot:latest
+    container_name: network-utilities
+    depends_on:
+      - vpn
+    network_mode: "service:vpn"  # Route through VPN
+    volumes:
+      - ./utils:/utils  # Optional shared volume for scripts or results
+    stdin_open: true  # Keep STDIN open
+    tty: true  # Allocate a pseudo-TTY
+    restart: "no"  # Don't start automatically
+
+networks:
+  vpn_network:
+    driver: bridge
