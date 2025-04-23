@@ -1,12 +1,12 @@
 # Use a Debian 11 (Bullseye) base image
 FROM debian:bullseye-slim
 
-# Install basic dependencies including Python dev headers
+# Install basic dependencies including Python 3.8
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget ca-certificates git build-essential libssl-dev zlib1g-dev \
     libbz2-dev libreadline-dev libsqlite3-dev libffi-dev libxml2-dev \
-    libxslt1-dev libre2-dev pkg-config python3 python3-pip python3-venv \
-    python3-dev python3-distutils \
+    libxslt1-dev libre2-dev pkg-config python3.8 python3.8-dev python3.8-venv \
+    python3.8-distutils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -18,7 +18,7 @@ USER grabsite
 WORKDIR /home/grabsite
 
 # Set up Python virtual environment
-RUN python3 -m venv /home/grabsite/gs-venv
+RUN python3.8 -m venv /home/grabsite/gs-venv
 
 # Install grab-site
 RUN /home/grabsite/gs-venv/bin/pip install --no-binary lxml --upgrade git+https://github.com/ArchiveTeam/grab-site
