@@ -37,7 +37,8 @@ services:
     # Start the dashboard server by default
     command: gs-server
     # Simple delay to wait for VPN connection
-    entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN connection...' && sleep 5 && exec $0 $@"]
+    # entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN connection...' && sleep 5 && exec $0 $@"]
+    entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN connection...' && while ! ping -c 1 -W 1 1.1.1.1; do sleep 1; done && echo 'VPN connected' && exec $0 $@"]
 
   # Network utilities container (not started automatically)
   netutils:
