@@ -2,6 +2,7 @@
 FROM --platform=linux/amd64 ubuntu:focal
 
 # Install basic dependencies including Python 3.8 and ping
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget ca-certificates git build-essential libssl-dev zlib1g-dev \
     libbz2-dev libreadline-dev libsqlite3-dev libffi-dev libxml2-dev \
