@@ -43,7 +43,7 @@ services:
     # Wait for VPN and ensure server is ready
     # entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN and server...' && while ! ping -c 1 -W 1 1.1.1.1; do sleep 1; done && echo 'VPN connected' && exec $0 $@"]
 
-  # Network utilities container (not started automatically)
+  # Network utilities container (must be started manually)
   netutils:
     image: nicolaka/netshoot:latest
     depends_on:
@@ -54,6 +54,7 @@ services:
     stdin_open: true  # Keep STDIN open
     tty: true  # Allocate a pseudo-TTY
     restart: "no"  # Don't start automatically
+    profiles: ["manual"]  # Only start with --profile manual
 
 networks:
   vpn_network:
