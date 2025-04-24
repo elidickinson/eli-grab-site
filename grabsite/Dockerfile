@@ -1,5 +1,5 @@
-# Use amd64 Ubuntu 20.04 (Focal) base image for better Python 3.8 support
-FROM --platform=linux/amd64 ubuntu:focal
+# Use Ubuntu 20.04 (Focal) base image for better Python 3.8 support
+FROM ubuntu:focal
 
 # Install basic dependencies including Python 3.8 and ping
 ENV DEBIAN_FRONTEND=noninteractive
