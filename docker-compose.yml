@@ -17,6 +17,9 @@ services:
       - ENCRYPTION=${ENCRYPTION:-strong}
       # Optional: Choose protocol (udp or tcp)
       - PROTOCOL=${PROTOCOL:-udp}
+    # Expose the WebSocket port through VPN
+    ports:
+      - "29000:29000"
     # Create a named network for containers to join
     networks:
       - vpn_network
@@ -37,15 +40,8 @@ services:
       - ./sites:/sites  # Directory for crawler configurations
     # Start the dashboard server by default
     command: gs-server --bind 0.0.0.0
-    environment:
-      - GRAB_SITE_WS_URL=ws://vpn:29000
     # Wait for VPN and ensure server is ready
-    entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN and server...' && while ! ping -c 1 -W 1 1.1.1.1; do sleep 1; done && echo 'VPN connected' && exec $0 $@"]
-
-  # Expose the WebSocket port through VPN
-  vpn:
-    ports:
-      - "29000:29000"
+    # entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN and server...' && while ! ping -c 1 -W 1 1.1.1.1; do sleep 1; done && echo 'VPN connected' && exec $0 $@"]
 
   # Network utilities container (not started automatically)
   netutils:
