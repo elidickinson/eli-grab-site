@@ -18,7 +18,7 @@ To start a crawl:
 docker compose exec grabsite grab-site http://example.com
 ```
 
-The WARC files will be saved to the `./warc` directory.
+The output (WARC files, logs, etc) will be saved to `./output/example.com-2025-04-24-ebe776d2/` style directories.
 
 ## Additional Commands
 
@@ -42,8 +42,7 @@ The WARC files will be saved to the `./warc` directory.
 
 - Edit `.env` to change VPN region/encryption
 - Crawler configurations go in `./sites`
-- WARC files are saved to `./warc`
-- Logs are stored in `./logs`
+- All output (WARC files, logs, etc) is saved to `./output` in subdirectories
 
 ## Notes
 

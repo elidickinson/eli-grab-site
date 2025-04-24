@@ -16,7 +16,7 @@ RUN useradd -m -s /bin/bash grabsite
 
 # Switch to the non-root user
 USER grabsite
-WORKDIR /home/grabsite
+WORKDIR /home/grabsite/output
 
 # Set up Python virtual environment
 RUN python3.8 -m venv /home/grabsite/gs-venv

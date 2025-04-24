@@ -35,9 +35,9 @@ services:
     # Connect to the VPN network - routes all traffic through the VPN
     network_mode: "service:vpn"
     volumes:
-      - ./warc:/warc  # Store WARC files in local directory
-      - ./logs:/logs  # Store logs in local directory
+      - ./output:/home/grabsite/output  # Unified output directory
       - ./sites:/sites  # Directory for crawler configurations
+    working_dir: /home/grabsite/output
     # Start the dashboard server by default
     command: gs-server --bind 0.0.0.0
     # Wait for VPN and ensure server is ready
