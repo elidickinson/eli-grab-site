@@ -39,8 +39,6 @@ services:
     working_dir: /home/grabsite/output
     # Start the dashboard server by default
     command: gs-server --bind 0.0.0.0
-    # Wait for VPN and ensure server is ready
-    # entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN and server...' && while ! ping -c 1 -W 1 1.1.1.1; do sleep 1; done && echo 'VPN connected' && exec $0 $@"]
 
   # Network utilities container (must be started manually)
   netutils:

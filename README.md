@@ -1,6 +1,8 @@
-# Grab-Site with VPN Docker Setup
+# grab-site with VPN Docker Setup
 
-This setup runs grab-site through a Private Internet Access VPN for secure web archiving.
+This setup runs [grab-site](https://github.com/ArchiveTeam/grab-site) within a Docker container and routing all traffic through a Private Internet Access VPN
+
+To avoid dependency issues I'm explicitly setting the platform in Docker to `linux/amd64` so it will use emulation on ARM devices like a recent MacBook.
 
 ## Quick Start
 
@@ -22,7 +24,7 @@ The output (WARC files, logs, etc) will be saved to `./output/example.com-2025-0
 
 ## Additional Commands
 
-- Access the grab-site shell:
+- Access a shell within the the grab-site container:
   ```bash
   docker compose exec grabsite bash
   ```
@@ -39,7 +41,7 @@ The output (WARC files, logs, etc) will be saved to `./output/example.com-2025-0
 
 - View logs:
   ```bash
-  docker compose logs -f grabsite
+  docker compose logs -f
   ```
 
 ## Configuration
