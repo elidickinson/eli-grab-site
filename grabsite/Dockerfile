@@ -21,6 +21,9 @@ WORKDIR /home/grabsite
 # Set up Python virtual environment
 RUN python3.8 -m venv /home/grabsite/gs-venv
 
+# Upgrade pip and install wheel first
+RUN /home/grabsite/gs-venv/bin/pip install --upgrade pip wheel
+
 # Install grab-site
 RUN /home/grabsite/gs-venv/bin/pip install --no-binary lxml --upgrade git+https://github.com/ArchiveTeam/grab-site
 
