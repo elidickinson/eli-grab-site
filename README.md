@@ -29,6 +29,10 @@ The output (WARC files, logs, etc) will be saved to `./output/example.com-2025-0
 
 - Start the netutils container (for debugging):
   ```bash
+  docker compose run --rm -it netutils bash
+  ```
+  or
+  ```bash
   docker compose --profile manual up -d netutils
   docker compose exec netutils bash
   ```
@@ -41,7 +45,6 @@ The output (WARC files, logs, etc) will be saved to `./output/example.com-2025-0
 ## Configuration
 
 - Edit `.env` to change VPN region/encryption
-- Crawler configurations go in `./sites`
 - All output (WARC files, logs, etc) is saved to `./output` in subdirectories
 
 ## Notes

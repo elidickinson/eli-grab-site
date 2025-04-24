@@ -52,7 +52,7 @@ services:
       - ./utils:/utils  # Optional shared volume for scripts or results
     stdin_open: true  # Keep STDIN open
     tty: true  # Allocate a pseudo-TTY
-    restart: "no"  # Don't start automatically
+    restart: "no"
     profiles: ["manual"]  # Only start with --profile manual
 
 networks:
