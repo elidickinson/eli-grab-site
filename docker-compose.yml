@@ -35,8 +35,7 @@ services:
     # Connect to the VPN network - routes all traffic through the VPN
     network_mode: "service:vpn"
     volumes:
-      - ./output:/home/grabsite/output  # Unified output directory
-      - ./sites:/sites  # Directory for crawler configurations
+      - ./output:/home/grabsite/output  # data/output directory
     working_dir: /home/grabsite/output
     # Start the dashboard server by default
     command: gs-server --bind 0.0.0.0
