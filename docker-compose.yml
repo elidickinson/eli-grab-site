@@ -38,7 +38,6 @@ services:
     # Start the dashboard server by default
     command: gs-server --bind 0.0.0.0
     environment:
-      - WS_URL=ws://vpn:29000
       - GRAB_SITE_WS_URL=ws://vpn:29000
     # Wait for VPN and ensure server is ready
     entrypoint: ["/bin/sh", "-c", "echo 'Waiting for VPN and server...' && while ! ping -c 1 -W 1 1.1.1.1; do sleep 1; done && echo 'VPN connected' && exec $0 $@"]
