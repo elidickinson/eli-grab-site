@@ -1,5 +1,5 @@
 services:
-  # Gluetun VPN service (optional)
+  # Gluetun VPN service
   vpn:
     image: qmcgaw/gluetun:latest
     cap_add:
@@ -15,7 +15,7 @@ services:
       - OPENVPN_USER=${VPN_USERNAME}
       - OPENVPN_PASSWORD=${VPN_PASSWORD}
       # Optional VPN settings
-      # - SERVER_COUNTRIES=${VPN_COUNTRY:-US}
+      - SERVER_COUNTRIES=${VPN_COUNTRY:-}
       - SERVER_REGIONS=${VPN_REGION:-}
       - SERVER_CITIES=${VPN_CITY:-}
       # Health check settings
@@ -28,8 +28,6 @@ services:
     # Create a named network for containers to join
     networks:
       - vpn_network
-    profiles:
-      - vpn  # Only used when VPN is enabled
 
   # Custom grab-site container (with VPN)
   grabsite:
@@ -45,29 +43,7 @@ services:
     working_dir: /home/grabsite/output
     # Start the dashboard server by default
     command: gs-server --bind 0.0.0.0
-    profiles:
-      - vpn  # Only used when VPN is enabled
-
-  # Custom grab-site container (no VPN)
-  grabsite-direct:
-    platform: linux/amd64
-    build:
-      context: ./grabsite
-      dockerfile: Dockerfile
-    # Expose dashboard port directly
-    ports:
-      - "29000:29000"
-    volumes:
-      - ./output:/home/grabsite/output  # data/output directory
-    working_dir: /home/grabsite/output
-    # Start the dashboard server by default
-    command: gs-server --bind 0.0.0.0
-    networks:
-      - default
-    profiles:
-      - default  # Used by default if no profile specified
 
 networks:
   vpn_network:
     driver: bridge
-  default:

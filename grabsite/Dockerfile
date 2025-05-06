@@ -1,12 +1,12 @@
 # Use Ubuntu 20.04 (Focal) base image for better Python 3.8 support
 FROM ubuntu:focal
 
-# Install basic dependencies including Python 3.8 and ping
+# Install basic dependencies including Python 3.8, ping, and curl
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget ca-certificates git build-essential libssl-dev zlib1g-dev \
     libbz2-dev libreadline-dev libsqlite3-dev libffi-dev libxml2-dev \
-    libxslt1-dev libre2-dev pkg-config iputils-ping \
+    libxslt1-dev libre2-dev pkg-config iputils-ping curl \
     python3.8 python3.8-dev python3.8-venv python3.8-distutils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

@@ -1,0 +1,20 @@
+services:
+  # Custom grab-site container (no VPN)
+  grabsite:
+    platform: linux/amd64
+    build:
+      context: ./grabsite
+      dockerfile: Dockerfile
+    # Expose dashboard port directly
+    ports:
+      - "29000:29000"
+    volumes:
+      - ./output:/home/grabsite/output  # data/output directory
+    working_dir: /home/grabsite/output
+    # Start the dashboard server by default
+    command: gs-server --bind 0.0.0.0
+    networks:
+      - default
+
+networks:
+  default:

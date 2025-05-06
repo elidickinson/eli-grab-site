@@ -1,6 +1,6 @@
 # grab-site with Docker Setup
 
-This setup runs [grab-site](https://github.com/ArchiveTeam/grab-site) within a Docker container with optional VPN routing through [gluetun](https://github.com/qdm12/gluetun), a multi-provider VPN client.
+This setup runs [grab-site](https://github.com/ArchiveTeam/grab-site) within a Docker container with VPN routing through [gluetun](https://github.com/qdm12/gluetun), a multi-provider VPN client.
 
 To avoid dependency issues, the grab-site container explicitly uses the platform `linux/amd64` so it will use emulation on ARM devices like Apple Silicon Macs.
 
@@ -14,11 +14,11 @@ To avoid dependency issues, the grab-site container explicitly uses the platform
 
 2. Start the services:
    ```bash
-   # Run WITHOUT VPN (default)
+   # Run WITH VPN (default)
    docker compose up -d
 
-   # Run WITH VPN
-   docker compose --profile vpn up -d
+   # Run WITHOUT VPN
+   docker compose -f docker-compose.novpn.yml up -d
    ```
 
 3. The grab-site dashboard will be available at `http://localhost:29000`
@@ -27,11 +27,11 @@ To avoid dependency issues, the grab-site container explicitly uses the platform
 
 To start a crawl:
 ```bash
-# When running WITHOUT VPN (default):
-docker compose exec grabsite-direct grab-site http://example.com
-
-# When running WITH VPN:
+# When running WITH VPN (default):
 docker compose exec grabsite grab-site http://example.com
+
+# When running WITHOUT VPN:
+docker compose -f docker-compose.novpn.yml exec grabsite grab-site http://example.com
 ```
 
 The output (WARC files, logs, etc) will be saved to `./output/example.com-DATE-HASH/` style directories.
@@ -40,11 +40,11 @@ The output (WARC files, logs, etc) will be saved to `./output/example.com-DATE-H
 
 - Access a shell within the grab-site container:
   ```bash
-  # When running WITHOUT VPN (default):
-  docker compose exec grabsite-direct bash
-
-  # When running WITH VPN:
+  # When running WITH VPN (default):
   docker compose exec grabsite bash
+
+  # When running WITHOUT VPN:
+  docker compose -f docker-compose.novpn.yml exec grabsite bash
   ```
 
 - View logs:
@@ -57,22 +57,22 @@ The output (WARC files, logs, etc) will be saved to `./output/example.com-DATE-H
 Network utility containers for debugging are available in a separate compose file. To use them:
 
 ```bash
-# Start debugging tools WITHOUT VPN
-docker compose -f docker-compose.yml -f docker-compose.debug.yml run --rm -it netutils-direct bash
+# Start debugging tools WITH VPN (default)
+docker compose -f docker-compose.yml -f docker-compose.debug.yml run --rm -it netutils bash
 
-# Start debugging tools WITH VPN
-docker compose -f docker-compose.yml -f docker-compose.debug.yml --profile vpn run --rm -it netutils bash
+# Start debugging tools WITHOUT VPN
+docker compose -f docker-compose.novpn.yml -f docker-compose.debug.yml run --rm -it netutils-direct bash
 ```
 
 You can also start them as services if needed:
 
 ```bash
-# Start debugging container WITH VPN
-docker compose -f docker-compose.yml -f docker-compose.debug.yml --profile vpn up -d netutils
+# Start debugging container WITH VPN (default)
+docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d netutils
 docker compose exec netutils bash
 
 # Start debugging container WITHOUT VPN
-docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d netutils-direct
+docker compose -f docker-compose.novpn.yml -f docker-compose.debug.yml up -d netutils-direct
 docker compose exec netutils-direct bash
 ```
 
@@ -101,8 +101,9 @@ See the [gluetun wiki](https://github.com/qdm12/gluetun-wiki) for provider-speci
 
 ## Notes
 
-- By default, the setup runs WITHOUT a VPN for simplicity
-- When using the VPN (with `--profile vpn`), all traffic is routed through the VPN container
+- By default, the setup runs WITH a VPN for privacy and bypassing geo-restrictions
+- For local/development use, you can run without VPN using the docker-compose.novpn.yml file
 - The dashboard runs on port 29000 by default
 - All output (WARC files, logs, etc) is saved to `./output` in subdirectories
 - Built to support both amd64 and arm64 architectures (through emulation when needed)
+- The grabsite container includes curl for testing connectivity from inside the container
