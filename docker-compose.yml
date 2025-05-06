@@ -67,35 +67,6 @@ services:
     profiles:
       - default  # Used by default if no profile specified
 
-  # Network utilities container (with VPN)
-  netutils:
-    image: nicolaka/netshoot:latest
-    depends_on:
-      - vpn
-    network_mode: service:vpn  # Route through VPN
-    volumes:
-      - ./utils:/utils  # Optional shared volume for scripts or results
-    stdin_open: true  # Keep STDIN open
-    tty: true  # Allocate a pseudo-TTY
-    restart: "no"
-    profiles:
-      - vpn  # Only used with VPN
-      - manual  # Only start with --profile manual
-
-  # Network utilities container (no VPN)
-  netutils-direct:
-    image: nicolaka/netshoot:latest
-    volumes:
-      - ./utils:/utils  # Optional shared volume for scripts or results
-    stdin_open: true  # Keep STDIN open
-    tty: true  # Allocate a pseudo-TTY
-    restart: "no"
-    profiles:
-      - default  # Used by default if no profile specified
-      - manual  # Only start with --profile manual
-    networks:
-      - default
-
 networks:
   vpn_network:
     driver: bridge

@@ -47,25 +47,34 @@ The output (WARC files, logs, etc) will be saved to `./output/example.com-DATE-H
   docker compose exec grabsite bash
   ```
 
-- Start the netutils container (for debugging):
-  ```bash
-  # When running WITHOUT VPN (default):
-  docker compose run --rm -it netutils-direct bash
-  # or
-  docker compose --profile manual up -d netutils-direct
-  docker compose exec netutils-direct bash
-
-  # When running WITH VPN:
-  docker compose --profile vpn run --rm -it netutils bash
-  # or
-  docker compose --profile vpn,manual up -d netutils
-  docker compose exec netutils bash
-  ```
-
 - View logs:
   ```bash
   docker compose logs -f
   ```
+
+## Debugging Tools
+
+Network utility containers for debugging are available in a separate compose file. To use them:
+
+```bash
+# Start debugging tools WITHOUT VPN
+docker compose -f docker-compose.yml -f docker-compose.debug.yml run --rm -it netutils-direct bash
+
+# Start debugging tools WITH VPN
+docker compose -f docker-compose.yml -f docker-compose.debug.yml --profile vpn run --rm -it netutils bash
+```
+
+You can also start them as services if needed:
+
+```bash
+# Start debugging container WITH VPN
+docker compose -f docker-compose.yml -f docker-compose.debug.yml --profile vpn up -d netutils
+docker compose exec netutils bash
+
+# Start debugging container WITHOUT VPN
+docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d netutils-direct
+docker compose exec netutils-direct bash
+```
 
 ## VPN Configuration
 
