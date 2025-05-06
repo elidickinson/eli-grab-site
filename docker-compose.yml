@@ -1,30 +1,37 @@
 services:
-  # PIA VPN service that routes all traffic
+  # Gluetun VPN service (optional)
   vpn:
-    image: qmcgaw/private-internet-access:latest
+    image: qmcgaw/gluetun:latest
     cap_add:
       - NET_ADMIN  # Required for VPN networking
     devices:
-      - /dev/net/tun  # Required for VPN tunneling
+      - /dev/net/tun:/dev/net/tun  # Required for VPN tunneling
     restart: unless-stopped
     environment:
-      # Load PIA credentials from environment variables
-      - USER=${PIA_USERNAME}
-      - PASSWORD=${PIA_PASSWORD}
-      # Choose your preferred region (from .env)
-      - REGION=${REGION:-US East}
-      # Optional: Choose encryption level (normal or strong)
-      - ENCRYPTION=${ENCRYPTION:-strong}
-      # Optional: Choose protocol (udp or tcp)
-      - PROTOCOL=${PROTOCOL:-udp}
-    # Expose the WebSocket port through VPN
+      # VPN provider configuration
+      - VPN_SERVICE_PROVIDER=${VPN_PROVIDER:-private internet access}
+      - VPN_TYPE=${VPN_TYPE:-openvpn}
+      # Provider-specific credentials
+      - OPENVPN_USER=${VPN_USERNAME}
+      - OPENVPN_PASSWORD=${VPN_PASSWORD}
+      # Optional VPN settings
+      # - SERVER_COUNTRIES=${VPN_COUNTRY:-US}
+      - SERVER_REGIONS=${VPN_REGION:-}
+      - SERVER_CITIES=${VPN_CITY:-}
+      # Health check settings
+      - HEALTH_TARGET_ADDRESS=${HEALTH_TARGET_ADDRESS:-1.1.1.1}
+      - DOT=off
+      - DNS_ADDRESS=9.9.9.9
+    # Expose the WebSocket port for the grabsite dashboard
     ports:
       - "29000:29000"
     # Create a named network for containers to join
     networks:
       - vpn_network
+    profiles:
+      - vpn  # Only used when VPN is enabled
 
-  # Custom grab-site container (forced to amd64)
+  # Custom grab-site container (with VPN)
   grabsite:
     platform: linux/amd64
     build:
@@ -32,27 +39,64 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - vpn
-    # Connect to the VPN network - routes all traffic through the VPN
-    network_mode: "service:vpn"
+    network_mode: service:vpn  # Routes all traffic through VPN
     volumes:
       - ./output:/home/grabsite/output  # data/output directory
     working_dir: /home/grabsite/output
     # Start the dashboard server by default
     command: gs-server --bind 0.0.0.0
+    profiles:
+      - vpn  # Only used when VPN is enabled
 
-  # Network utilities container (must be started manually)
+  # Custom grab-site container (no VPN)
+  grabsite-direct:
+    platform: linux/amd64
+    build:
+      context: ./grabsite
+      dockerfile: Dockerfile
+    # Expose dashboard port directly
+    ports:
+      - "29000:29000"
+    volumes:
+      - ./output:/home/grabsite/output  # data/output directory
+    working_dir: /home/grabsite/output
+    # Start the dashboard server by default
+    command: gs-server --bind 0.0.0.0
+    networks:
+      - default
+    profiles:
+      - default  # Used by default if no profile specified
+
+  # Network utilities container (with VPN)
   netutils:
     image: nicolaka/netshoot:latest
     depends_on:
       - vpn
-    network_mode: "service:vpn"  # Route through VPN
+    network_mode: service:vpn  # Route through VPN
     volumes:
       - ./utils:/utils  # Optional shared volume for scripts or results
     stdin_open: true  # Keep STDIN open
     tty: true  # Allocate a pseudo-TTY
     restart: "no"
-    profiles: ["manual"]  # Only start with --profile manual
+    profiles:
+      - vpn  # Only used with VPN
+      - manual  # Only start with --profile manual
+
+  # Network utilities container (no VPN)
+  netutils-direct:
+    image: nicolaka/netshoot:latest
+    volumes:
+      - ./utils:/utils  # Optional shared volume for scripts or results
+    stdin_open: true  # Keep STDIN open
+    tty: true  # Allocate a pseudo-TTY
+    restart: "no"
+    profiles:
+      - default  # Used by default if no profile specified
+      - manual  # Only start with --profile manual
+    networks:
+      - default
 
 networks:
   vpn_network:
     driver: bridge
+  default:
