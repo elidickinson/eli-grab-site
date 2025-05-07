@@ -1,5 +1,17 @@
 services:
-  # Custom grab-site container (no VPN)
+  # Standalone mitmproxy container
+  mitmproxy:
+    image: mitmproxy/mitmproxy:latest
+    # Mount our addon script
+    volumes:
+      - ./mitmproxy_curl_cffi_addon.py:/mitmproxy_curl_cffi_addon.py
+    # Run mitmdump with our addon
+    command: mitmdump --listen-port 8080 --mode regular --ssl-insecure --set connection_strategy=lazy --set block_global=false -s /mitmproxy_curl_cffi_addon.py
+    # Optional: expose port to host for direct testing
+    # ports:
+    #   - "8080:8080"
+
+  # Custom grab-site container (no VPN, simplified)
   grabsite:
     platform: linux/amd64
     build:
@@ -13,8 +25,5 @@ services:
     working_dir: /home/grabsite/output
     # Start the dashboard server by default
     command: gs-server --bind 0.0.0.0
-    networks:
-      - default
-
-networks:
-  default:
+    depends_on:
+      - mitmproxy

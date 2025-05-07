@@ -6,8 +6,18 @@ allowing for bypassing of anti-bot protections while using grab-site.
 """
 
 from mitmproxy import http, ctx
-from curl_cffi import requests as curl_requests
+import os
+import sys
 import json
+
+# Install curl_cffi if not already installed
+try:
+    from curl_cffi import requests as curl_requests
+except ImportError:
+    ctx.log.info("Installing curl_cffi...")
+    import subprocess
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "curl_cffi"])
+    from curl_cffi import requests as curl_requests
 
 class CurlCffiAddon:
     def __init__(self):
@@ -60,10 +70,10 @@ class CurlCffiAddon:
         ]
         
         for header in headers_to_remove:
-            if header in headers:
+            if header.lower() in headers:
                 if self.verbose:
                     ctx.log.debug(f"Removing header: {header}")
-                del headers[header]
+                del headers[header.lower()]
 
         # Log the request details if in verbose mode
         if self.verbose:
@@ -79,6 +89,7 @@ class CurlCffiAddon:
                 data=data,
                 impersonate=self.impersonate_browser,
                 verify=self.verify_ssl,
+                timeout=30,
             )
             
             # Log the response if in verbose mode
@@ -87,18 +98,16 @@ class CurlCffiAddon:
                 ctx.log.debug(f"Response headers: {json.dumps(dict(resp.headers))}")
 
             # Create a response object for mitmproxy
-            # mitmproxy will handle decompression when clients access
-            # the .content property of the response
-            headers = dict(resp.headers)
+            response_headers = dict(resp.headers)
             
             # Remove content-encoding to avoid double decompression
-            if 'content-encoding' in headers:
-                del headers['content-encoding']
+            if 'content-encoding' in response_headers:
+                del response_headers['content-encoding']
                 
             response = http.Response.make(
                 status_code=resp.status_code,
                 content=resp.content,
-                headers=headers
+                headers=response_headers
             )
             return response
             

@@ -1,26 +1,12 @@
-# Use Ubuntu 22.04 (Jammy) base image
-FROM ubuntu:jammy
+# Use Python 3.8 as base image
+FROM python:3.8-slim
 
-# Install basic dependencies
-ENV DEBIAN_FRONTEND=noninteractive
+# Install system dependencies for lxml and other libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget ca-certificates git build-essential libssl-dev zlib1g-dev \
-    libbz2-dev libreadline-dev libsqlite3-dev libffi-dev libxml2-dev \
-    libxslt1-dev libre2-dev pkg-config iputils-ping curl \
-    python3-apt python3-pip \
-    lsb-release gnupg \
-    rustc cargo \
-    software-properties-common \
+    build-essential libxml2-dev libxslt1-dev libssl-dev \
+    iputils-ping curl git pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-# Add deadsnakes PPA for multiple Python versions
-RUN add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && \
-    apt-get install -y python3.8 python3.8-venv python3.8-dev \
-                       python3.12 python3.12-venv python3.12-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 
 # Set up a non-root user
 RUN useradd -m -s /bin/bash grabsite
@@ -29,36 +15,22 @@ RUN useradd -m -s /bin/bash grabsite
 USER grabsite
 WORKDIR /home/grabsite
 
-# Create directories for virtual environments
-RUN mkdir -p /home/grabsite/.venv/grabsite
-RUN mkdir -p /home/grabsite/.venv/mitmproxy
+# Install grab-site (using prebuilt wheel for lxml)
+RUN pip install --user git+https://github.com/ArchiveTeam/grab-site
+RUN pip install --user curl-cffi
 
-# Create Python virtual environments with specific versions
-RUN python3.8 -m venv /home/grabsite/.venv/grabsite
-RUN python3.12 -m venv /home/grabsite/.venv/mitmproxy
-
-# Install grab-site in the Python 3.8 environment
-RUN /home/grabsite/.venv/grabsite/bin/pip install --no-binary lxml git+https://github.com/ArchiveTeam/grab-site
-RUN /home/grabsite/.venv/grabsite/bin/pip install curl-cffi
-# List installed scripts to verify location
-RUN ls -la /home/grabsite/.venv/grabsite/bin/
-
-# Install mitmproxy and curl-cffi in the Python 3.12 environment
-RUN /home/grabsite/.venv/mitmproxy/bin/pip install mitmproxy curl-cffi
-
-# Create wrapper scripts to activate the correct environment
-COPY start-mitmproxy.sh /home/grabsite/
-COPY grab-site-with-impersonation.sh /home/grabsite/
-COPY mitmproxy_curl_cffi_addon.py /home/grabsite/
-
-# Setup workspace directory
+# Setup workspace directory first
 WORKDIR /home/grabsite/output
 
-# Make scripts executable
+# Copy impersonation script with proper ownership
 USER root
-RUN chmod +x /home/grabsite/grab-site-with-impersonation.sh
-RUN chmod +x /home/grabsite/start-mitmproxy.sh
+COPY grab-site-with-impersonation.sh /home/grabsite/
+RUN chmod +x /home/grabsite/grab-site-with-impersonation.sh && \
+    chown grabsite:grabsite /home/grabsite/grab-site-with-impersonation.sh
 USER grabsite
 
+# Add user's local bin to PATH
+ENV PATH="/home/grabsite/.local/bin:${PATH}"
+
 # Start the dashboard server by default
-CMD ["/home/grabsite/.venv/grabsite/bin/gs-server"]
+CMD ["gs-server"]
