@@ -34,6 +34,26 @@ docker compose exec grabsite grab-site http://example.com
 docker compose -f docker-compose.novpn.yml exec grabsite grab-site http://example.com
 ```
 
+### Browser Impersonation
+
+For sites that require a modern browser or have anti-bot measures, you can use the browser impersonation feature. This routes all HTTP requests through a proxy that uses curl_cffi to impersonate legitimate browser traffic:
+
+```bash
+# With VPN and Chrome impersonation (default browser):
+docker compose exec grabsite /home/grabsite/grab-site-with-browser.sh http://example.com
+
+# Specify a different browser type (chrome, firefox, safari):
+docker compose exec grabsite /home/grabsite/grab-site-with-browser.sh --browser=firefox http://example.com
+
+# With VPN, Chrome impersonation, and additional grab-site options:
+docker compose exec grabsite /home/grabsite/grab-site-with-browser.sh http://example.com --concurrency=3 --1
+
+# Enable verbose logging to see all requests:
+docker compose exec grabsite /home/grabsite/grab-site-with-browser.sh --verbose http://example.com
+```
+
+This uses a custom HTTP proxy with curl_cffi to impersonate browser requests for all traffic, which can help bypass many anti-bot protections and CAPTCHAs without requiring a full headless browser.
+
 The output (WARC files, logs, etc) will be saved to `./output/example.com-DATE-HASH/` style directories.
 
 ## Additional Commands

@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libbz2-dev libreadline-dev libsqlite3-dev libffi-dev libxml2-dev \
     libxslt1-dev libre2-dev pkg-config iputils-ping curl \
     python3.8 python3.8-dev python3.8-venv python3.8-distutils \
+    rustc cargo \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -27,8 +28,20 @@ RUN /home/grabsite/gs-venv/bin/pip install --upgrade pip wheel
 # Install grab-site
 RUN /home/grabsite/gs-venv/bin/pip install --no-binary lxml --upgrade git+https://github.com/ArchiveTeam/grab-site
 
+# Install curl-cffi for Chrome impersonation
+RUN /home/grabsite/gs-venv/bin/pip install curl-cffi
+
 # Add to PATH
 ENV PATH="/home/grabsite/gs-venv/bin:${PATH}"
+
+# Copy wrapper scripts and proxy
+COPY grab-site-with-browser.sh /home/grabsite/
+COPY browser_proxy.py /home/grabsite/
+
+# Make scripts executable
+USER root
+RUN chmod +x /home/grabsite/grab-site-with-browser.sh
+USER grabsite
 
 # Start the dashboard server by default
 CMD ["gs-server"]
