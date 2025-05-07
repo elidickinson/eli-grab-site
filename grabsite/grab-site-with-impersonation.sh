@@ -2,7 +2,7 @@
 # Wrapper script for grab-site with browser impersonation via standalone mitmproxy container
 
 # Default values
-PROXY_HOST="mitmproxy"
+PROXY_HOST="localhost"
 PROXY_PORT=8080
 VERBOSE=false
 
@@ -56,6 +56,6 @@ ORIGINAL_ARGS=("$@")
 
 # Run grab-site with proxy settings
 PYTHONWARNINGS=ignore \
-grab-site --wpull-args="--http-proxy=$PROXY_HOST:$PROXY_PORT --https-proxy=$PROXY_HOST:$PROXY_PORT --no-check-certificate" "${ORIGINAL_ARGS[@]}"
+grab-site --wpull-args="--http-proxy=$PROXY_HOST:$PROXY_PORT" "${ORIGINAL_ARGS[@]}"
 
 exit $?

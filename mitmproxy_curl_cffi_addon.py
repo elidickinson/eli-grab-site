@@ -9,15 +9,7 @@ from mitmproxy import http, ctx
 import os
 import sys
 import json
-
-# Install curl_cffi if not already installed
-try:
-    from curl_cffi import requests as curl_requests
-except ImportError:
-    ctx.log.info("Installing curl_cffi...")
-    import subprocess
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "curl_cffi"])
-    from curl_cffi import requests as curl_requests
+from curl_cffi import requests as curl_requests
 
 class CurlCffiAddon:
     def __init__(self):
@@ -34,10 +26,10 @@ class CurlCffiAddon:
         if "impersonate_browser" in ctx.options:
             self.impersonate_browser = ctx.options.impersonate_browser
             ctx.log.info(f"Set impersonation browser to: {self.impersonate_browser}")
-            
+
         if "verify_ssl" in ctx.options:
             self.verify_ssl = ctx.options.verify_ssl
-            
+
         if "verbose" in ctx.options:
             self.verbose = ctx.options.verbose
 
@@ -48,7 +40,7 @@ class CurlCffiAddon:
                 ctx.log.info(f"CONNECT request to {flow.request.host}:{flow.request.port}")
             # Let mitmproxy handle the CONNECT tunneling natively
             return
-            
+
         # Handle the request using curl_cffi with browser impersonation
         if self.verbose:
             ctx.log.info(f"Intercepting request: {flow.request.method} {flow.request.url}")
@@ -60,26 +52,27 @@ class CurlCffiAddon:
         method = flow.request.method
         headers = dict(flow.request.headers)
         data = flow.request.content if flow.request.content else None
-        
-        # Remove headers that curl_cffi will set with browser impersonation
-        # to avoid conflicts with the browser profiles
-        headers_to_remove = [
-            'user-agent', 'accept', 'accept-language', 'accept-encoding',
-            'upgrade-insecure-requests', 'sec-fetch-dest', 'sec-fetch-mode',
-            'sec-fetch-site', 'sec-fetch-user'
-        ]
-        
-        for header in headers_to_remove:
+
+        # Use an allowlist approach - only keep specific headers
+        # and let curl_cffi set the rest with browser impersonation
+        headers_to_keep = ['cookie', 'referer']
+
+        # Create a new headers dict with only the allowed headers
+        filtered_headers = {}
+        for header in headers_to_keep:
             if header.lower() in headers:
+                filtered_headers[header.lower()] = headers[header.lower()]
                 if self.verbose:
-                    ctx.log.debug(f"Removing header: {header}")
-                del headers[header.lower()]
+                    ctx.log.debug(f"Keeping header: {header}")
+
+        # Replace the original headers with our filtered set
+        headers = filtered_headers
 
         # Log the request details if in verbose mode
         if self.verbose:
             ctx.log.info(f"Making request to {url} with {self.impersonate_browser} impersonation")
             ctx.log.debug(f"Headers: {json.dumps(headers)}")
-            
+
         try:
             # Make the request with curl_cffi with browser impersonation
             resp = curl_requests.request(
@@ -91,7 +84,7 @@ class CurlCffiAddon:
                 verify=self.verify_ssl,
                 timeout=30,
             )
-            
+
             # Log the response if in verbose mode
             if self.verbose:
                 ctx.log.info(f"Response: {resp.status_code}")
@@ -99,18 +92,18 @@ class CurlCffiAddon:
 
             # Create a response object for mitmproxy
             response_headers = dict(resp.headers)
-            
+
             # Remove content-encoding to avoid double decompression
             if 'content-encoding' in response_headers:
                 del response_headers['content-encoding']
-                
+
             response = http.Response.make(
                 status_code=resp.status_code,
                 content=resp.content,
                 headers=response_headers
             )
             return response
-            
+
         except Exception as e:
             # Handle errors
             error_message = f"Error making request with curl_cffi: {str(e)}"

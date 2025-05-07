@@ -1,10 +1,10 @@
 # Use Python 3.8 as base image
 FROM python:3.8-slim
 
-# Install system dependencies for lxml and other libraries
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libxml2-dev libxslt1-dev libssl-dev \
-    iputils-ping curl git pkg-config \
+    build-essential pkg-config libxml2-dev libxslt1-dev libssl-dev \
+    zlib1g-dev iputils-ping curl git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -15,9 +15,11 @@ RUN useradd -m -s /bin/bash grabsite
 USER grabsite
 WORKDIR /home/grabsite
 
-# Install grab-site (using prebuilt wheel for lxml)
+# Install lxml from source first to ensure consistent libxml2 version
+RUN pip install --user --no-binary lxml lxml
+
+# Install grab-site
 RUN pip install --user git+https://github.com/ArchiveTeam/grab-site
-RUN pip install --user curl-cffi
 
 # Setup workspace directory first
 WORKDIR /home/grabsite/output

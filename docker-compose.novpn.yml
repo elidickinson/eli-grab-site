@@ -2,11 +2,12 @@ services:
   # Standalone mitmproxy container
   mitmproxy:
     image: mitmproxy/mitmproxy:latest
-    # Mount our addon script
+    # Mount our addon script and entrypoint
     volumes:
       - ./mitmproxy_curl_cffi_addon.py:/mitmproxy_curl_cffi_addon.py
-    # Run mitmdump with our addon
-    command: mitmdump --listen-port 8080 --mode regular --ssl-insecure --set connection_strategy=lazy --set block_global=false -s /mitmproxy_curl_cffi_addon.py
+      - ./mitmproxy-entrypoint.sh:/mitmproxy-entrypoint.sh
+    # Use our custom entrypoint script
+    entrypoint: ["/mitmproxy-entrypoint.sh"]
     # Optional: expose port to host for direct testing
     # ports:
     #   - "8080:8080"

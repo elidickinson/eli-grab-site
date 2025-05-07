@@ -25,9 +25,32 @@ services:
     # Expose the WebSocket port for the grabsite dashboard
     ports:
       - "29000:29000"
+      # Optionally expose mitmproxy port for direct testing
+      # - "8080:8080"
     # Create a named network for containers to join
     networks:
       - vpn_network
+    # Add healthcheck to ensure VPN is connected before other services start
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- ${HEALTH_TARGET_ADDRESS:-1.1.1.1} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Mitmproxy container routing through VPN
+  mitmproxy:
+    image: mitmproxy/mitmproxy:latest
+    depends_on:
+      vpn:
+        condition: service_healthy
+    network_mode: service:vpn  # Routes all traffic through VPN
+    # Mount our addon script and entrypoint
+    volumes:
+      - ./mitmproxy_curl_cffi_addon.py:/mitmproxy_curl_cffi_addon.py
+      - ./mitmproxy-entrypoint.sh:/mitmproxy-entrypoint.sh
+    # Use our custom entrypoint script
+    entrypoint: ["/mitmproxy-entrypoint.sh"]
 
   # Custom grab-site container (with VPN)
   grabsite:
@@ -36,13 +59,16 @@ services:
       context: ./grabsite
       dockerfile: Dockerfile
     depends_on:
-      - vpn
+      vpn:
+        condition: service_healthy
+      mitmproxy:
+        condition: service_started
     network_mode: service:vpn  # Routes all traffic through VPN
     volumes:
       - ./output:/home/grabsite/output  # data/output directory
     working_dir: /home/grabsite/output
     # Start the dashboard server by default
-    command: /home/grabsite/.venv/grabsite/bin/gs-server --bind 0.0.0.0
+    command: gs-server --bind 0.0.0.0
 
 networks:
   vpn_network:
