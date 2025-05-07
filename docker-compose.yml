@@ -1,57 +1,74 @@
 services:
-  # PIA VPN service that routes all traffic
+  # Gluetun VPN service
   vpn:
-    image: qmcgaw/private-internet-access:latest
+    image: qmcgaw/gluetun:latest
     cap_add:
       - NET_ADMIN  # Required for VPN networking
     devices:
-      - /dev/net/tun  # Required for VPN tunneling
+      - /dev/net/tun:/dev/net/tun  # Required for VPN tunneling
     restart: unless-stopped
     environment:
-      # Load PIA credentials from environment variables
-      - USER=${PIA_USERNAME}
-      - PASSWORD=${PIA_PASSWORD}
-      # Choose your preferred region (from .env)
-      - REGION=${REGION:-US East}
-      # Optional: Choose encryption level (normal or strong)
-      - ENCRYPTION=${ENCRYPTION:-strong}
-      # Optional: Choose protocol (udp or tcp)
-      - PROTOCOL=${PROTOCOL:-udp}
-    # Expose the WebSocket port through VPN
+      # VPN provider configuration
+      - VPN_SERVICE_PROVIDER=${VPN_PROVIDER:-private internet access}
+      - VPN_TYPE=${VPN_TYPE:-openvpn}
+      # Provider-specific credentials
+      - OPENVPN_USER=${VPN_USERNAME}
+      - OPENVPN_PASSWORD=${VPN_PASSWORD}
+      # Optional VPN settings
+      - SERVER_COUNTRIES=${VPN_COUNTRY:-}
+      - SERVER_REGIONS=${VPN_REGION:-}
+      - SERVER_CITIES=${VPN_CITY:-}
+      # Health check settings
+      - HEALTH_TARGET_ADDRESS=${HEALTH_TARGET_ADDRESS:-1.1.1.1}
+      - DOT=off
+      - DNS_ADDRESS=9.9.9.9
+    # Expose the WebSocket port for the grabsite dashboard
     ports:
       - "29000:29000"
+      # Optionally expose mitmproxy port for direct testing
+      # - "8080:8080"
     # Create a named network for containers to join
     networks:
       - vpn_network
+    # Add healthcheck to ensure VPN is connected before other services start
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- ${HEALTH_TARGET_ADDRESS:-1.1.1.1} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
-  # Custom grab-site container (forced to amd64)
+  # Mitmproxy container routing through VPN
+  mitmproxy:
+    image: mitmproxy/mitmproxy:latest
+    depends_on:
+      vpn:
+        condition: service_healthy
+    network_mode: service:vpn  # Routes all traffic through VPN
+    # Mount our addon script and entrypoint
+    volumes:
+      - ./mitmproxy_curl_cffi_addon.py:/mitmproxy_curl_cffi_addon.py
+      - ./mitmproxy-entrypoint.sh:/mitmproxy-entrypoint.sh
+    # Use our custom entrypoint script
+    entrypoint: ["/mitmproxy-entrypoint.sh"]
+
+  # Custom grab-site container (with VPN)
   grabsite:
     platform: linux/amd64
     build:
       context: ./grabsite
       dockerfile: Dockerfile
     depends_on:
-      - vpn
-    # Connect to the VPN network - routes all traffic through the VPN
-    network_mode: "service:vpn"
+      vpn:
+        condition: service_healthy
+      mitmproxy:
+        condition: service_started
+    network_mode: service:vpn  # Routes all traffic through VPN
     volumes:
       - ./output:/home/grabsite/output  # data/output directory
     working_dir: /home/grabsite/output
     # Start the dashboard server by default
     command: gs-server --bind 0.0.0.0
-
-  # Network utilities container (must be started manually)
-  netutils:
-    image: nicolaka/netshoot:latest
-    depends_on:
-      - vpn
-    network_mode: "service:vpn"  # Route through VPN
-    volumes:
-      - ./utils:/utils  # Optional shared volume for scripts or results
-    stdin_open: true  # Keep STDIN open
-    tty: true  # Allocate a pseudo-TTY
-    restart: "no"
-    profiles: ["manual"]  # Only start with --profile manual
 
 networks:
   vpn_network:

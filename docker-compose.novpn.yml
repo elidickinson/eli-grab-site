@@ -1,0 +1,30 @@
+services:
+  # Standalone mitmproxy container
+  mitmproxy:
+    image: mitmproxy/mitmproxy:latest
+    # Mount our addon script and entrypoint
+    volumes:
+      - ./mitmproxy_curl_cffi_addon.py:/mitmproxy_curl_cffi_addon.py
+      - ./mitmproxy-entrypoint.sh:/mitmproxy-entrypoint.sh
+    # Use our custom entrypoint script
+    entrypoint: ["/mitmproxy-entrypoint.sh"]
+    # Optional: expose port to host for direct testing
+    # ports:
+    #   - "8080:8080"
+
+  # Custom grab-site container (no VPN, simplified)
+  grabsite:
+    platform: linux/amd64
+    build:
+      context: ./grabsite
+      dockerfile: Dockerfile
+    # Expose dashboard port directly
+    ports:
+      - "29000:29000"
+    volumes:
+      - ./output:/home/grabsite/output  # data/output directory
+    working_dir: /home/grabsite/output
+    # Start the dashboard server by default
+    command: gs-server --bind 0.0.0.0
+    depends_on:
+      - mitmproxy
