@@ -75,3 +75,7 @@ docker compose exec netutils bash
 - The grab-site dashboard runs on port 29000 by default
 - The Docker setup is configured to use platform `linux/amd64` to ensure compatibility with ARM devices through emulation
 - When modifying the Dockerfile, remember to build for both amd64 and arm64 architectures
+
+## Proxy Configuration
+
+- Grab-site doesn't work with HTTP_PROXY env vars. Use an arg like `--wpull-args="--http-proxy=127.0.0.1:16379"` as the first argument to grab-site instead

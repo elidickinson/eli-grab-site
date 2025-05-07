@@ -42,7 +42,7 @@ services:
       - ./output:/home/grabsite/output  # data/output directory
     working_dir: /home/grabsite/output
     # Start the dashboard server by default
-    command: gs-server --bind 0.0.0.0
+    command: /home/grabsite/.venv/grabsite/bin/gs-server --bind 0.0.0.0
 
 networks:
   vpn_network:
