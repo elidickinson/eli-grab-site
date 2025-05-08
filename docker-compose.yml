@@ -15,8 +15,8 @@ services:
       - OPENVPN_USER=${VPN_USERNAME}
       - OPENVPN_PASSWORD=${VPN_PASSWORD}
       # Optional VPN settings
+      - SERVER_REGIONS=${VPN_REGION:-US East}
       - SERVER_COUNTRIES=${VPN_COUNTRY:-}
-      - SERVER_REGIONS=${VPN_REGION:-}
       - SERVER_CITIES=${VPN_CITY:-}
       # Health check settings
       - HEALTH_TARGET_ADDRESS=${HEALTH_TARGET_ADDRESS:-1.1.1.1}
