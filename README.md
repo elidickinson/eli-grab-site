@@ -92,28 +92,22 @@ The output (WARC files, logs, etc) will be saved to `./output/example.com-DATE-H
   docker compose exec grabsite curl -k -v -x http://localhost:8080/ https://example.com/
   ```
 
-## Debugging Tools
+## Debugging
 
-Network utility containers for debugging are available in a separate compose file. To use them:
-
-```bash
-# Start debugging tools WITH VPN (default)
-docker compose -f docker-compose.yml -f docker-compose.debug.yml run --rm -it netutils bash
-
-# Start debugging tools WITHOUT VPN
-docker compose -f docker-compose.novpn.yml -f docker-compose.debug.yml run --rm -it netutils-direct bash
-```
-
-You can also start them as services if needed:
+For debugging network issues, you can use the built-in tools in the grabsite container:
 
 ```bash
-# Start debugging container WITH VPN (default)
-docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d netutils
-docker compose exec netutils bash
+# Access shell in the grabsite container (with VPN)
+docker compose exec grabsite bash
 
-# Start debugging container WITHOUT VPN
-docker compose -f docker-compose.novpn.yml -f docker-compose.debug.yml up -d netutils-direct
-docker compose exec netutils-direct bash
+# Access shell in the grabsite container (without VPN)
+docker compose -f docker-compose.novpn.yml exec grabsite bash
+
+# Test connectivity to a site
+docker compose exec grabsite curl -v https://example.com
+
+# Test with mitmproxy browser impersonation
+docker compose exec grabsite curl -k -v -x http://localhost:8080/ https://example.com/
 ```
 
 ## VPN Configuration

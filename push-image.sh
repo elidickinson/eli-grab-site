@@ -1,4 +1,6 @@
 #!/bin/bash
+# Manual build script for local use when GitHub Actions workflow fails or for testing.
+# Normally, GitHub Actions should handle building and publishing the image.
 
 # Check if container-builder exists
 if ! docker buildx inspect container-builder &>/dev/null; then
