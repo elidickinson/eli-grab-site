@@ -1,10 +1,11 @@
-# grab-site with Docker Setup
+# grab-site with Docker plus optional VPN & browser impersonation
 
-This setup runs [grab-site](https://github.com/ArchiveTeam/grab-site) within a Docker container with VPN routing through [gluetun](https://github.com/qdm12/gluetun), a multi-provider VPN client. It also includes browser impersonation using mitmproxy and curl_cffi to bypass anti-bot protections.
+This setup runs [grab-site](https://github.com/ArchiveTeam/grab-site) within a Docker container with VPN routing through [gluetun](https://github.com/qdm12/gluetun), a multi-provider VPN client. It also includes browser impersonation using mitmproxy and [curl_cffi](https://github.com/lexiforest/curl_cffi) to impersonate Chrome more effectively. It should work on amd64 or arm64 (Apple M-series) platforms.
 
-To avoid dependency issues, the grab-site container explicitly uses the platform `linux/amd64` so it will use emulation on ARM devices like Apple Silicon Macs.
 
 ## Quick Start
+
+### Using Prebuilt Image (Recommended)
 
 1. Copy `sample.env` to `.env` and configure your VPN credentials:
    ```bash
@@ -21,7 +22,21 @@ To avoid dependency issues, the grab-site container explicitly uses the platform
    docker compose -f docker-compose.novpn.yml up -d
    ```
 
-3. The grab-site dashboard will be available at `http://localhost:29000`
+   This will automatically pull the prebuilt image from GitHub Container Registry (`ghcr.io/elidickinson/grabsite:latest`).
+
+### Building Locally (Optional)
+
+If you prefer to build the image locally:
+
+```bash
+# Run WITH VPN and build locally
+docker compose up -d --build
+
+# Run WITHOUT VPN and build locally
+docker compose -f docker-compose.novpn.yml up -d --build
+```
+
+3. The grab-site server should be running and a dashboard will be available at `http://localhost:29000`
 
 ## Running Crawls
 
@@ -36,7 +51,7 @@ docker compose -f docker-compose.novpn.yml exec grabsite grab-site http://exampl
 
 ### Browser Impersonation
 
-For sites that require a modern browser or have anti-bot measures, you can use the browser impersonation feature. This routes all HTTP requests through a proxy that uses curl_cffi to impersonate legitimate browser traffic:
+For rescusing sites that check headers and SSL ciphers to block automated traffic, you can use the browser impersonation feature. This routes all HTTP requests through a proxy that uses curl_cffi to impersonate legitimate browser traffic:
 
 ```bash
 # With VPN and Chrome impersonation (default browser):
@@ -135,14 +150,28 @@ See the [gluetun wiki](https://github.com/qdm12/gluetun-wiki) for provider-speci
 The system consists of these main components:
 
 1. **VPN Container**: Based on `qmcgaw/gluetun` which creates a secure VPN tunnel for all traffic.
-   
+
 2. **Mitmproxy Container**: Runs a proxy server with browser impersonation capabilities using curl_cffi.
 
 3. **Grabsite Container**: A custom Docker container that runs the grab-site web archiving tool.
-   
+
 4. **Netutils Container** (optional): A container with network troubleshooting tools.
 
 All traffic from mitmproxy and grab-site is routed through the VPN container using Docker's networking features.
+
+## Quick Start Without Repository Clone
+
+If you don't want to clone the entire repository but still want to use the prebuilt image, use our quickstart script:
+
+```bash
+curl -s https://raw.githubusercontent.com/elidickinson/eli-grab-site/main/quickstart.sh | bash
+```
+
+This interactive script will:
+- Set up a minimal environment with or without VPN support (your choice)
+- Download only the necessary files
+- Guide you through configuration
+- Start the containers automatically
 
 ## Notes
 
@@ -153,3 +182,4 @@ All traffic from mitmproxy and grab-site is routed through the VPN container usi
 - Built to support both amd64 and arm64 architectures (through emulation when needed)
 - The grabsite container includes curl for testing connectivity from inside the container
 - Browser impersonation uses mitmproxy with curl_cffi to mimic real browser traffic
+- The prebuilt image is available at `ghcr.io/elidickinson/grabsite:latest`

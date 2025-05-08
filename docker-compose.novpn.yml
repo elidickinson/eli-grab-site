@@ -14,7 +14,7 @@ services:
 
   # Custom grab-site container (no VPN, simplified)
   grabsite:
-    platform: linux/amd64
+    image: ghcr.io/elidickinson/grabsite:latest
     build:
       context: ./grabsite
       dockerfile: Dockerfile
